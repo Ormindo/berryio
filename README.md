@@ -1,2 +1,2 @@
-# berryio
-IO fiddling on the Raspberry
+# berryllio
+Raspberry low-level input/output handling.
