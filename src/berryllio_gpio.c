@@ -7,7 +7,7 @@
 
 #define GPIO_BASE_ADDR (IO_BASE_ADDR + 0x200000)
 
-static const int8_t rpipin_to_bcmgpio[] = { -1, -1,  // GND  GND
+static const int8_t pin_to_gpio[] = { -1, -1,  // 3.3V  5V
 					     2, -1,  // IO2  5V
 					     3, -1,  // IO3  GND
 					     4, 14,  // IO4  IO14
