@@ -1,6 +1,6 @@
-#include "berryio_gpio.h"
+#include "berryllio_gpio.h"
 
-#include "berryio.h"
+#include "berryllio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>

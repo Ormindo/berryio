@@ -1,4 +1,4 @@
-#include "berryio_gpio.h"
+#include "berryllio_gpio.h"
 
 int main(int argc, char* argv[])
 {
