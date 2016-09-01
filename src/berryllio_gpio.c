@@ -66,9 +66,9 @@ void set_pin_input(uint8_t pin)
 	if (check_pin(pin) < 0)
 		return;
 	
-	volatile uint32_t* gpfsel = gpios + GPFSEL_OFFSET + 4*((uint32_t)gpios/GPFSEL_GPIO_COUNT);
+	volatile uint32_t* gpfsel = gpios + GPFSEL_OFFSET + 4*(pin/GPFSEL_GPIO_COUNT);
 	
-	uint8_t offset = ((uint32_t)gpios % GPFSEL_GPIO_COUNT) * 3;
+	uint8_t offset = (pin % GPFSEL_GPIO_COUNT) * 3;
 	uint32_t bits = 0b111 << offset;
 	(*gpfsel) = (*gpfsel) & ~bits;
 }
