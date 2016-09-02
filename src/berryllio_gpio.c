@@ -23,6 +23,18 @@
 
 #define GPIO_INPUT_READ_OFFSET 0x34
 
+// ============================================================================ 
+//                                  PROTOTYPES
+// ============================================================================
+
+static int check_pin(uint8_t pin);
+static void gpfsel_write(uint8_t gpio, uint8_t value);
+
+// ============================================================================ 
+//                                  GLOBAL VARS
+// ============================================================================
+
+// Raspberry Pi B+ pin map
 static const int8_t pin_to_gpio[] = { -1, -1,  // 3.3V  5V
 					     2, -1,  // IO2  5V
 					     3, -1,  // IO3  GND
@@ -38,7 +50,11 @@ static const int8_t pin_to_gpio[] = { -1, -1,  // 3.3V  5V
 					    -1, 7 }; // GND  IO7
 
 static volatile uint32_t* gpios = NULL;
-						
+
+// ============================================================================
+//                                   FUNCTIONS
+// ============================================================================
+
 void init_gpio(void)
 {
 	int mem = open("/dev/mem", O_RDWR);
@@ -46,9 +62,37 @@ void init_gpio(void)
 	 	exit(EXIT_FAILURE);
 
 	gpios = mmap(NULL, GPIO_MEM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED , mem, GPIO_BASE_ADDR);
-
 }
 
+int set_pin_input(uint8_t pin)
+{
+	if (check_pin(pin) < 0)
+		return -1;
+	
+	gpfsel_write(pin, 0);
+	
+	return 0;
+}
+
+int read_pin(uint8_t pin)
+{
+	if (check_pin(pin) < 0)
+		return -1;
+	
+	int8_t gpio = pin_to_gpio[pin];	
+	// 32 GPIOs per input register
+	volatile uint32_t* input = gpios + GPIO_INPUT_READ_OFFSET/4 + (gpio/32);
+	//volatile uint32_t* input = (uint32_t*)((uint32_t)gpios + GPIO_INPUT_READ_OFFSET + 4*(pin/32));
+	
+	uint8_t offset = (1 << gpio%32);
+	return ((*input & offset) == offset);
+}
+
+// ============================================================================
+//                               STATIC FUNCTIONS
+// ============================================================================
+
+// Checks if pin number is valid and if pin is a gpio
 static int check_pin(uint8_t pin)
 {
 	if (pin > GPIO_COUNT - 1)
@@ -61,25 +105,15 @@ static int check_pin(uint8_t pin)
 	return 0;
 }
 
-int set_pin_input(uint8_t pin)
+// Writes 'value' to the GPFSEL register bits associated with 'gpio'
+static void gpfsel_write(uint8_t gpio, uint8_t value)
 {
-	if (check_pin(pin) < 0)
-		return -1;
+	// 10 GPIOs per GPFSEL register
+	volatile uint32_t* gpfsel = gpios + GPFSEL_OFFSET/4 + (gpio/GPFSEL_GPIO_COUNT);
 	
-	volatile uint32_t* gpfsel = gpios + GPFSEL_OFFSET + 4*(pin/GPFSEL_GPIO_COUNT);
-	
-	uint8_t offset = (pin % GPFSEL_GPIO_COUNT) * 3;
-	uint32_t bits = 0b111 << offset;
-	(*gpfsel) = (*gpfsel) & ~bits;
-}
-
-int read_pin(uint8_t pin)
-{
-	if (check_pin(pin) < 0)
-		return -1;
-	
-	volatile uint32_t* input = gpios + GPIO_INPUT_READ_OFFSET + 4*(pin/31);
-	
-	uint8_t offset = (1 << pin%31);
-	return ((*input & offset) == offset);
+	uint8_t offset = (gpio % GPFSEL_GPIO_COUNT) * 3;
+	uint32_t clear_mask = ~(0b111 << offset);
+	value = value << offset;
+	// Clear then set the 3 targeted bits
+	(*gpfsel) = ((*gpfsel) & clear_mask) | value;
 }
