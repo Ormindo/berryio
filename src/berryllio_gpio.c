@@ -61,10 +61,10 @@ static int check_pin(uint8_t pin)
 	return 0;
 }
 
-void set_pin_input(uint8_t pin)
+int set_pin_input(uint8_t pin)
 {
 	if (check_pin(pin) < 0)
-		return;
+		return -1;
 	
 	volatile uint32_t* gpfsel = gpios + GPFSEL_OFFSET + 4*(pin/GPFSEL_GPIO_COUNT);
 	
