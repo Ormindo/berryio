@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
-int main(int argc, char* argv[])
+int main(void)
 {
 	init_gpio();
 	set_pin_input(2);

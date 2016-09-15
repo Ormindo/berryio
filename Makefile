@@ -1,36 +1,48 @@
+# ===== DIRECTORIES =====
 OBJ_DIR = bin
 SRC_DIR = src
+TST_DIR = tests
 INC_DIR = inc
-TARGET = $(OBJ_DIR)/prog
 
+# ===== COMPILE OPTIONS =====
 CC = arm-linux-gnueabihf-gcc
 CFLAGS = -I $(INC_DIR) -Wall -std=c99 -Wextra -g
 
 LD = arm-linux-gnueabihf-gcc
 LDFLAGS = -lm
 
-C_FILES = $(wildcard $(SRC_DIR)/*.c)
-H_FILES = $(wildcard $(INC_DIR)/*.h)
-O_FILES = $(C_FILES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+# ===== FILES =====
+C_SRC = $(wildcard $(SRC_DIR)/*.c)
+H_SRC = $(wildcard $(INC_DIR)/*.h)
+O_SRC = $(C_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-.PHONY: all clean compile
+C_TST = $(wildcard $(TST_DIR)/*.c)
+O_TST = $(C_TST:$(TST_DIR)/%.c=$(OBJ_DIR)/%.o)
+TST_BIN = $(C_TST:$(TST_DIR)/%.c=$(OBJ_DIR)/%.out)
+
+# ===== RULES =====
+.PHONY: all clean compile tests
 
 all : compile
 
-compile : $(O_FILES)
-	$(LD) -o $(TARGET) $^ $(LDFLAGS)
+tests : $(TST_BIN) $(O_TST)
 
-# Compile files with header
+$(OBJ_DIR)/%.out : $(OBJ_DIR)/%.o $(O_SRC)
+	$(LD) -o $@ $^
+
+compile : $(O_SRC)
+
+# Compile src files with header
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c $(INC_DIR)/%.h
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-# Compile files without header
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
+# Compile test files without header
+$(OBJ_DIR)/%.o : $(TST_DIR)/%.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 clean :
 	rm -f $(OBJ_DIR)/*.o
-	rm -f $(TARGET)
+	rm -f $(OBJ_DIR)/*.out
 
 
 
