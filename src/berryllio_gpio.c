@@ -3,8 +3,6 @@
 #include "berryllio.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
 #include <sys/stat.h> 
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -31,6 +29,8 @@
 
 static int8_t pin_to_gpio(uint8_t pin);
 static void gpfsel_write(uint8_t gpio, uint8_t value);
+static void write_output(uint8_t gpio);
+static void clear_output(uint8_t gpio);
 
 // ============================================================================ 
 //                                  GLOBAL VARS
@@ -78,19 +78,23 @@ int set_pin_input(uint8_t pin)
 	if (gpio < 0)
 		return -1;
 
+	// 0 sets gpio as input
 	gpfsel_write(gpio, 0);
 	
 	return 0;
 }
 
-/*int set_pin_output(uint8_t pin)
+int set_pin_output(uint8_t pin)
 {
 	int8_t gpio = pin_to_gpio(pin);
 	if (gpio < 0)
 		return -1;
 
-	gpfsel_write
-}*/
+	// 1 sets gpio as output
+	gpfsel_write(gpio, 1);
+
+	return 0;
+}
 
 int read_pin(uint8_t pin)
 {
@@ -104,6 +108,21 @@ int read_pin(uint8_t pin)
 	
 	uint8_t offset = (1 << gpio%32);
 	return ((*input & offset) == offset);
+}
+
+int write_pin(uint8_t pin, bool value)
+{
+	int8_t gpio = pin_to_gpio(pin);
+	if (gpio < 0)
+		return -1;
+
+	if (value) {
+		write_output(gpio);
+	} else {
+		clear_output(gpio);
+	}
+
+	return 0;
 }
 
 // ============================================================================
@@ -130,4 +149,18 @@ static void gpfsel_write(uint8_t gpio, uint8_t value)
 	value = value << offset;
 	// Clear then set the 3 targeted bits
 	(*gpfsel) = ((*gpfsel) & clear_mask) | value;
+}
+
+static void write_output(uint8_t gpio)
+{
+	volatile uint32_t* set = gpios + GPIO_OUTPUT_SET_OFFSET/4 + (gpio/32);
+	uint8_t offset = (1 << gpio%32);
+	*set = offset;
+}
+
+static void clear_output(uint8_t gpio)
+{
+	volatile uint32_t* clear = gpios + GPIO_OUTPUT_CLEAR_OFFSET/4 + (gpio/32);
+	uint8_t offset = (1 << gpio%32);
+	*clear = offset;
 }

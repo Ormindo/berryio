@@ -18,15 +18,18 @@ int main(int argc, char* argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	err = set_pin_input(pin);
+	err = set_pin_output(pin);
 	if (err < 0) {
-		fprintf(stderr, "set_pin_input() failed\n");
+		fprintf(stderr, "set_pin_output() failed\n");
 		exit(EXIT_FAILURE);
 	}
 
 	for(int i = 0; i < 10; i++) {
-		int val = read_pin(pin);
-		printf("val = %i\n", val);
+		printf("output set to 1\n");
+		write_pin(pin, true);
+		sleep(1);
+		printf("output set to 0\n");
+		write_pin(pin, false);
 		sleep(1);
 	}
 }
