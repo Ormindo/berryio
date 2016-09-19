@@ -76,7 +76,8 @@ int set_pin_input(uint8_t pin)
 	if (!is_pin_gpio(pin))
 		return -1;
 	
-	gpfsel_write(pin, 0);
+	int8_t gpio = pin_to_gpio[pin];
+	gpfsel_write(gpio, 0);
 	
 	return 0;
 }
