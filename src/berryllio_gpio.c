@@ -155,6 +155,7 @@ static void write_output(uint8_t gpio)
 {
 	volatile uint32_t* set = gpios + GPIO_OUTPUT_SET_OFFSET/4 + (gpio/32);
 	uint8_t offset = (1 << gpio%32);
+	// zeroes are ignored, hence setting the right bit is enough
 	*set = offset;
 }
 
@@ -162,5 +163,6 @@ static void clear_output(uint8_t gpio)
 {
 	volatile uint32_t* clear = gpios + GPIO_OUTPUT_CLEAR_OFFSET/4 + (gpio/32);
 	uint8_t offset = (1 << gpio%32);
+	// zeroes are ignored, hence setting the right bit is enough
 	*clear = offset;
 }
