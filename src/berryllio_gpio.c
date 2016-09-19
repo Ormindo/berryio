@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <sys/stat.h> 
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -27,7 +28,7 @@
 //                                  PROTOTYPES
 // ============================================================================
 
-static int check_pin(uint8_t pin);
+static bool is_pin_gpio(uint8_t pin);
 static void gpfsel_write(uint8_t gpio, uint8_t value);
 
 // ============================================================================ 
@@ -72,7 +73,7 @@ int init_gpio(void)
 
 int set_pin_input(uint8_t pin)
 {
-	if (check_pin(pin) < 0)
+	if (!is_pin_gpio(pin))
 		return -1;
 	
 	gpfsel_write(pin, 0);
@@ -82,7 +83,7 @@ int set_pin_input(uint8_t pin)
 
 int read_pin(uint8_t pin)
 {
-	if (check_pin(pin) < 0)
+	if (!is_pin_gpio(pin))
 		return -1;
 	
 	int8_t gpio = pin_to_gpio[pin];	
@@ -99,16 +100,13 @@ int read_pin(uint8_t pin)
 // ============================================================================
 
 // Checks if pin number is valid and if pin is a gpio
-static int check_pin(uint8_t pin)
+static bool is_pin_gpio(uint8_t pin)
 {
 	if (pin > GPIO_COUNT - 1)
-		return -1;
+		return false;
 	
 	int8_t gpio = pin_to_gpio[pin];
-	if (gpio < 0)
-		return -1;
-	
-	return 0;
+	return gpio >= 0;
 }
 
 // Writes 'value' to the GPFSEL register bits associated with 'gpio'
