@@ -13,6 +13,7 @@
 #define GPIO_BASE_ADDR (IO_BASE_ADDR + GPIO_ADDR_OFFSET)
 #define GPIO_MEM_SIZE 0xB0
 
+#define PIN_COUNT 26
 #define GPIO_COUNT 53
 
 #define GPFSEL_OFFSET 0
@@ -28,7 +29,7 @@
 //                                  PROTOTYPES
 // ============================================================================
 
-static bool is_pin_gpio(uint8_t pin);
+static int8_t pin_to_gpio(uint8_t pin);
 static void gpfsel_write(uint8_t gpio, uint8_t value);
 
 // ============================================================================ 
@@ -36,7 +37,7 @@ static void gpfsel_write(uint8_t gpio, uint8_t value);
 // ============================================================================
 
 // Raspberry Pi B+ pin map
-static const int8_t pin_to_gpio[] = {
+static const int8_t pin_gpio_map[] = {
 	-1, -1, // 3.3V 5V
 	 2, -1, // IO2  5V
 	 3, -1, // IO3  GND
@@ -73,21 +74,30 @@ int init_gpio(void)
 
 int set_pin_input(uint8_t pin)
 {
-	if (!is_pin_gpio(pin))
+	int8_t gpio = pin_to_gpio(pin);
+	if (gpio < 0)
 		return -1;
-	
-	int8_t gpio = pin_to_gpio[pin];
+
 	gpfsel_write(gpio, 0);
 	
 	return 0;
 }
 
+/*int set_pin_output(uint8_t pin)
+{
+	int8_t gpio = pin_to_gpio(pin);
+	if (gpio < 0)
+		return -1;
+
+	gpfsel_write
+}*/
+
 int read_pin(uint8_t pin)
 {
-	if (!is_pin_gpio(pin))
+	int8_t gpio = pin_to_gpio(pin);
+	if (gpio < 0)
 		return -1;
-	
-	int8_t gpio = pin_to_gpio[pin];	
+
 	// 32 GPIOs per input register
 	volatile uint32_t* input = gpios + GPIO_INPUT_READ_OFFSET/4 + (gpio/32);
 	//volatile uint32_t* input = (uint32_t*)((uint32_t)gpios + GPIO_INPUT_READ_OFFSET + 4*(pin/32));
@@ -101,13 +111,12 @@ int read_pin(uint8_t pin)
 // ============================================================================
 
 // Checks if pin number is valid and if pin is a gpio
-static bool is_pin_gpio(uint8_t pin)
+static int8_t pin_to_gpio(uint8_t pin)
 {
-	if (pin > GPIO_COUNT - 1)
-		return false;
+	if (pin > PIN_COUNT - 1)
+		return -1;
 	
-	int8_t gpio = pin_to_gpio[pin];
-	return gpio >= 0;
+	return pin_gpio_map[pin];
 }
 
 // Writes 'value' to the GPFSEL register bits associated with 'gpio'
