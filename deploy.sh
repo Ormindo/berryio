@@ -9,4 +9,3 @@ do
     scp "$test" pi@raspberrypi:"$SYNC_DIR"
 done
 
-xfce4-terminal --title "Raspberry pi terminal" -x bash -c "ssh -t pi@raspberrypi 'cd $SYNC_DIR; bash'"
