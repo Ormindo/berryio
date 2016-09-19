@@ -57,13 +57,17 @@ static volatile uint32_t* gpios = NULL;
 //                                   FUNCTIONS
 // ============================================================================
 
-void init_gpio(void)
+int init_gpio(void)
 {
 	int mem = open("/dev/mem", O_RDWR);
 	if (mem < 0)
-	 	exit(EXIT_FAILURE);
+	        return -1;
 
 	gpios = mmap(NULL, GPIO_MEM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED , mem, GPIO_BASE_ADDR);
+	if ((int)gpios == -1)
+		return -1;
+
+	return 0;
 }
 
 int set_pin_input(uint8_t pin)
