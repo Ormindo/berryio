@@ -12,16 +12,18 @@
 #define GPIO_MEM_SIZE 0xB0
 
 #define PIN_COUNT 26
-#define GPIO_COUNT 53
 
 #define GPFSEL_OFFSET 0
 #define GPFSEL_GPIO_COUNT 10
 
-#define GPIO_OUTPUT_SET_OFFSET 0x1C
+#define GPSET_OFFSET 0x1C
+#define GPSET_GPIO_COUNT 32
 
-#define GPIO_OUTPUT_CLEAR_OFFSET 0x28
+#define GPCLR_OFFSET 0x28
+#define GPCLR_GPIO_COUNT 32
 
-#define GPIO_INPUT_READ_OFFSET 0x34
+#define GPLEV_OFFSET 0x34
+#define GPLEV_GPIO_COUNT 32
 
 // ============================================================================ 
 //                                  PROTOTYPES
@@ -103,11 +105,10 @@ int read_pin(uint8_t pin)
 		return -1;
 
 	// 32 GPIOs per input register
-	volatile uint32_t* input = gpios + GPIO_INPUT_READ_OFFSET/4 + (gpio/32);
-	//volatile uint32_t* input = (uint32_t*)((uint32_t)gpios + GPIO_INPUT_READ_OFFSET + 4*(pin/32));
+	volatile uint32_t* gplev = gpios + GPLEV_OFFSET / (sizeof gplev) + (gpio / GPLEV_GPIO_COUNT);
 	
 	uint8_t offset = (1 << gpio%32);
-	return ((*input & offset) == offset);
+	return ((*gplev & offset) == offset);
 }
 
 int write_pin(uint8_t pin, bool value)
@@ -141,8 +142,8 @@ static int8_t pin_to_gpio(uint8_t pin)
 // Writes 'value' to the GPFSEL register bits associated with 'gpio'
 static void gpfsel_write(uint8_t gpio, uint8_t value)
 {
-	// 10 GPIOs per GPFSEL register
-	volatile uint32_t* gpfsel = gpios + GPFSEL_OFFSET/4 + (gpio/GPFSEL_GPIO_COUNT);
+	// GPFSEL_GPIO_COUNT GPIOs per GPFSEL register
+	volatile uint32_t* gpfsel = gpios + GPFSEL_OFFSET / (sizeof gpfsel) + (gpio / GPFSEL_GPIO_COUNT);
 	
 	uint8_t offset = (gpio % GPFSEL_GPIO_COUNT) * 3;
 	uint32_t clear_mask = ~(0b111 << offset);
@@ -153,16 +154,16 @@ static void gpfsel_write(uint8_t gpio, uint8_t value)
 
 static void write_output(uint8_t gpio)
 {
-	volatile uint32_t* set = gpios + GPIO_OUTPUT_SET_OFFSET/4 + (gpio/32);
-	uint8_t offset = (1 << gpio%32);
+	volatile uint32_t* gpset = gpios + GPSET_OFFSET / (sizeof gpset) + (gpio / GPSET_GPIO_COUNT);
+	uint8_t value = (1 << gpio%32);
 	// zeroes are ignored, hence setting the right bit is enough
-	*set = offset;
+	*gpset = value;
 }
 
 static void clear_output(uint8_t gpio)
 {
-	volatile uint32_t* clear = gpios + GPIO_OUTPUT_CLEAR_OFFSET/4 + (gpio/32);
-	uint8_t offset = (1 << gpio%32);
+	volatile uint32_t* gpclr = gpios + GPCLR_OFFSET / (sizeof gpclr) + (gpio / GPCLR_GPIO_COUNT);
+	uint8_t value = (1 << gpio%32);
 	// zeroes are ignored, hence setting the right bit is enough
-	*clear = offset;
+	*gpclr = value;
 }
