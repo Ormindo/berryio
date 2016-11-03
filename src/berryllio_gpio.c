@@ -104,7 +104,7 @@ int read_pin(uint8_t pin)
 	if (gpio < 0)
 		return -1;
 
-	// 32 GPIOs per input register
+	// GPLEV_GPIO_COUNT GPIOs per input register
 	volatile uint32_t* gplev = gpios + GPLEV_OFFSET / (sizeof gplev) + (gpio / GPLEV_GPIO_COUNT);
 	
 	uint8_t offset = (1 << gpio%32);
