@@ -25,6 +25,33 @@
 #define GPLEV_OFFSET 0x34
 #define GPLEV_GPIO_COUNT 32
 
+struct gpio_regs {
+	volatile uint32_t gpfsel[6];
+        uint32_t : 32;
+	volatile uint32_t gpset[2];
+        uint32_t : 32;
+	volatile uint32_t gpclr[2];
+	uint32_t : 32;
+	volatile const uint32_t gplev[2];
+	uint32_t : 32;
+	volatile uint32_t gpeds[2];
+	uint32_t : 32;
+	volatile uint32_t gpren[2];
+	uint32_t : 32;
+	volatile uint32_t gpfen[2];
+	uint32_t : 32;
+	volatile uint32_t gphen[2];
+	uint32_t : 32;
+	volatile uint32_t gplen[2];
+	uint32_t : 32;
+	volatile uint32_t gparen[2];
+	uint32_t : 32;
+	volatile uint32_t gpafen[2];
+	uint32_t : 32;
+	volatile uint32_t gppud;
+	volatile uint32_t gppudclk[2];
+};
+
 // ============================================================================ 
 //                                  PROTOTYPES
 // ============================================================================
