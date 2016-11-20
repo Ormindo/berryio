@@ -1,5 +1,4 @@
 #include "berryllio_gpio.h"
-
 #include "berryllio.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,7 +81,7 @@ static const int8_t pin_gpio_map[] = {
 	-1, 7   // GND  IO7
 }; 
 
-static volatile uint32_t* gpios = NULL;
+static volatile struct gpio_regs* gpios = NULL;
 
 // ============================================================================
 //                                   FUNCTIONS
@@ -95,6 +94,7 @@ int init_gpio(void)
 	        return -1;
 
 	gpios = mmap(NULL, GPIO_MEM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED , mem, GPIO_BASE_ADDR);
+
 	if ((int)gpios == -1)
 		return -1;
 
@@ -131,11 +131,8 @@ int read_pin(uint8_t pin)
 	if (gpio < 0)
 		return -1;
 
-	// GPLEV_GPIO_COUNT GPIOs per input register
-	volatile uint32_t* gplev = gpios + GPLEV_OFFSET / (sizeof gplev) + (gpio / GPLEV_GPIO_COUNT);
-	
 	uint8_t offset = (1 << gpio%32);
-	return ((*gplev & offset) == offset);
+	return ((gpios->gplev[gpio / GPLEV_GPIO_COUNT] & offset) == offset);
 }
 
 int write_pin(uint8_t pin, bool value)
@@ -170,7 +167,7 @@ static int8_t pin_to_gpio(uint8_t pin)
 static void gpfsel_write(uint8_t gpio, uint8_t value)
 {
 	// GPFSEL_GPIO_COUNT GPIOs per GPFSEL register
-	volatile uint32_t* gpfsel = gpios + GPFSEL_OFFSET / (sizeof gpfsel) + (gpio / GPFSEL_GPIO_COUNT);
+	volatile uint32_t* gpfsel = &gpios->gpfsel[gpio / GPFSEL_GPIO_COUNT];
 	
 	uint8_t offset = (gpio % GPFSEL_GPIO_COUNT) * 3;
 	uint32_t clear_mask = ~(0b111 << offset);
@@ -181,16 +178,12 @@ static void gpfsel_write(uint8_t gpio, uint8_t value)
 
 static void write_output(uint8_t gpio)
 {
-	volatile uint32_t* gpset = gpios + GPSET_OFFSET / (sizeof gpset) + (gpio / GPSET_GPIO_COUNT);
-	uint8_t value = (1 << gpio%32);
 	// zeroes are ignored, hence setting the right bit is enough
-	*gpset = value;
+	gpios->gpset[gpio / GPSET_GPIO_COUNT] = 1 << gpio % 32;
 }
 
 static void clear_output(uint8_t gpio)
 {
-	volatile uint32_t* gpclr = gpios + GPCLR_OFFSET / (sizeof gpclr) + (gpio / GPCLR_GPIO_COUNT);
-	uint8_t value = (1 << gpio%32);
 	// zeroes are ignored, hence setting the right bit is enough
-	*gpclr = value;
+	gpios->gpclr[gpio / GPCLR_GPIO_COUNT] = 1 << gpio % 32;
 }
